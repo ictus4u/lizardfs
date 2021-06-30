@@ -17,4 +17,6 @@ docker run --rm -it \
     -DENABLE_TESTS=ON \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache \
     -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+  && make \
+  && make install \
   && tail -f /dev/null"
