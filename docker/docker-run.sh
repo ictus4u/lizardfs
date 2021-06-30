@@ -13,5 +13,8 @@ docker run --rm -it \
   -d ${image_name} \
   "mkdir -p ./build \
   && cd ./build \
-  && cmake .. -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+  && cmake .. \
+    -DENABLE_TESTS=ON \
+    -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
   && tail -f /dev/null"
