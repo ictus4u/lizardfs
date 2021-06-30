@@ -60,7 +60,7 @@ stop_tests() {
 	# start with killing lizardfstest processes, this will likely suffice
 	sudo pkill -9 -u lizardfstest
 	sleep 0.1
-	while pgrep -u $users_list >/dev/null ; do
+	while ps -u $users_list | sed '1d' | grep -v [d]efunct >/dev/null ; do
 		for user in $users; do
 			sudo pkill -9 -u $user
 		done
