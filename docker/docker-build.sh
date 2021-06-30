@@ -9,4 +9,3 @@ docker build \
   -t ${image_name} \
   -f "${script_folder}/Dockerfile" \
   "${script_folder}/../"
-  
