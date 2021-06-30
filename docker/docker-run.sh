@@ -12,6 +12,7 @@ docker run --rm -it \
   -v "${script_folder}/../volumes/ccache:/ccache" \
   --cap-add SYS_ADMIN \
   --security-opt "apparmor=unconfined" \
+  --device /dev/fuse:/dev/fuse \
   --device /dev/loop0:/dev/loop0 \
   --device /dev/loop1:/dev/loop1 \
   --device /dev/loop2:/dev/loop2 \
@@ -33,4 +34,8 @@ docker run --rm -it \
   && cd ../tests/ \
   && mkdir -p /mnt/hdd{0..3} \
   && ./setup_machine.sh setup /mnt/hdd{1..3} \
+  && service rsyslog start \
+  && (echo ': \${LIZARDFS_ROOT:=/usr/local}' | tee -a /etc/lizardfs_tests.conf) \
+  && cd ../build/tests/ \
+  && ./lizardfs-tests --gtest_filter='SanityChecks*' \
   && tail -f /dev/null"
