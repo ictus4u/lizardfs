@@ -39,6 +39,11 @@ const Attributes InodeStats::attr =
 	  {{'f', 0x01,0xA4, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,1, 0,0,0,0,0,0,0,0}};
 const Inode InodeStats::inode_ = SPECIAL_INODE_STATS;
 
+// 0x0124 == 0b100100100 == 0444
+const Attributes InodeBaldor::attr =
+	  {{'f', 0x01,0x24, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,1, 0,0,0,0,0,0,0,0}};
+const Inode InodeBaldor::inode_ = SPECIAL_INODE_BALDOR;
+
 // 0x0100 == 0b100000000 == 0400
 const Attributes InodeOplog::attr =
 	  {{'f', 0x01,0x00, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,1, 0,0,0,0,0,0,0,0}};

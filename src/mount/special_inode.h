@@ -45,6 +45,11 @@ namespace InodeStats {
 	extern const LizardClient::Inode inode_;
 }
 
+namespace InodeBaldor {
+	extern const Attributes attr;
+	extern const LizardClient::Inode inode_;
+}
+
 namespace InodeOplog {
 	extern const Attributes attr;
 	extern const LizardClient::Inode inode_;
