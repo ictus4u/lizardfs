@@ -32,9 +32,11 @@
 #define SPECIAL_INODE_META_TRASH      (SPECIAL_INODE_BASE + 0x5U)
 #define SPECIAL_INODE_META_UNDEL      (SPECIAL_INODE_BASE + 0x6U)
 #define SPECIAL_INODE_META_RESERVED   (SPECIAL_INODE_BASE + 0x7U)
+#define SPECIAL_INODE_BALDOR          (SPECIAL_INODE_BASE + 0xBU)
 
 #define SPECIAL_FILE_NAME_MASTERINFO      ".masterinfo"
 #define SPECIAL_FILE_NAME_STATS           ".stats"
+#define SPECIAL_FILE_NAME_BALDOR          ".baldor"
 #define SPECIAL_FILE_NAME_OPLOG           ".oplog"
 #define SPECIAL_FILE_NAME_OPHISTORY       ".ophistory"
 #define SPECIAL_FILE_NAME_TWEAKS          ".lizardfs_tweaks"
