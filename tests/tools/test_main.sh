@@ -29,3 +29,4 @@ done
 . tools/color.sh
 . tools/continuous_test.sh
 . tools/logs.sh
+. tools/collaborator.sh
