@@ -14,7 +14,11 @@ else()
 endif()
 
 foreach(unittest_name ${UNITTEST_TEST_NAMES})
-  add_executable(unittest_${unittest_name} ${UNITTESTS_MAIN})
+  file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false
+          ${unittest_name}_test.h ${unittest_name}_test.cc
+          ${unittest_name}_*_test.h ${unittest_name}_*_test.cc)
+  message("Debug: unittest_${unittest_name} ${UNITTESTS_MAIN} ${TEST_SOURCES}")
+  add_executable(unittest_${unittest_name} ${UNITTESTS_MAIN} ${TEST_SOURCES})
   target_link_libraries(unittest_${unittest_name} gtest
         ${ENABLE_WHOLE_ARCHIVE} ${unittest_name}_unittest ${DISABLE_WHOLE_ARCHIVE} ${${unittest_name}_UNITTEST_LINKLIST}
         unittests-helpers unittest-mocks ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY})
