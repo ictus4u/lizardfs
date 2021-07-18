@@ -38,3 +38,12 @@ TEST(MountUnitTests, TestSpecialFileHelloReturnsExpectedResult) {
 
 	EXPECT_EQ(expectedResult, readReply);
 }
+
+TEST(MountUnitTests, TestHelloSpecialFileAttributeContainsInode) {
+	char attrstr[256] {0};
+	auto context1 = std::unique_ptr<LizardClient::Context>(new LizardClient::Context(12, 13, 14, 16));
+
+	auto attrReply = special_getattr(InodeBaldor::inode_, *context1, attrstr);
+
+	EXPECT_EQ(attrReply.attr.st_ino, InodeBaldor::inode_);
+}
