@@ -51,6 +51,10 @@ static void release(FileInfo *fi) {
 }
 } // InodeStats
 
+namespace InodeBaldor {
+static void release(__attribute__((unused)) FileInfo *fi) {}
+} // InodeBaldor
+
 namespace InodeOplog {
 static void release(FileInfo *fi) {
 	oplog_releasehandle(fi->fh);
@@ -105,7 +109,7 @@ static const std::array<ReleaseFunc, 16> funcs = {{
 	 nullptr,                       //0x8U
 	 nullptr,                       //0x9U
 	 nullptr,                       //0xAU
-	 nullptr,                       //0xBU
+	 &InodeBaldor::release,              //0xBU
 	 nullptr,                       //0xCU
 	 nullptr,                       //0xDU
 	 nullptr,                       //0xEU

@@ -118,6 +118,18 @@ static std::vector<uint8_t> read(const Context &ctx,
 }
 } // InodeStats
 
+namespace InodeBaldor {
+static std::vector<uint8_t> read(const Context &ctx,
+		size_t size, off_t off, __attribute__((unused)) FileInfo *fi, int debug_mode) {
+	if (debug_mode) {
+		printDebugReadInfo(ctx, SPECIAL_INODE_BALDOR, size, off);
+	}
+	char msg[] = "Hello World!\n";
+	auto ssize = strlen(msg);
+	return std::vector<uint8_t>(msg, msg + ssize);
+}
+} // InodeBaldor
+
 namespace InodeOplog {
 static std::vector<uint8_t> read(const Context &ctx,
 		size_t size, off_t off, FileInfo *fi, int debug_mode) {
@@ -193,7 +205,7 @@ static const std::array<std::function<std::vector<uint8_t>
 	 nullptr,                       //0x8U
 	 nullptr,                       //0x9U
 	 nullptr,                       //0xAU
-	 nullptr,                       //0xBU
+	 &InodeBaldor::read,            //0xBU
 	 nullptr,                       //0xCU
 	 nullptr,                       //0xDU
 	 nullptr,                       //0xEU
