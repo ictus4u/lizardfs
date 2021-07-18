@@ -67,13 +67,13 @@ static void open(const Context &ctx, FileInfo *fi) {
 }
 } // InodeStats
 
-namespace InodeBaldor {
+namespace InodeHello {
 static void open(__attribute__((unused)) const Context &ctx, FileInfo *fi) {
 	if ((fi->flags & O_ACCMODE) != O_RDONLY) {
 		throw RequestException(LIZARDFS_ERROR_EACCES);
 	}
 }
-} // InodeBaldor
+} // InodeHello
 
 namespace InodeOplog {
 static void open(const Context &ctx, FileInfo *fi) {
@@ -131,7 +131,7 @@ static const std::array<std::function<void
 	 nullptr,                       //0x8U
 	 nullptr,                       //0x9U
 	 nullptr,                       //0xAU
-	 &InodeBaldor::open,            //0xBU
+	 &InodeHello::open,            //0xBU
 	 nullptr,                       //0xCU
 	 nullptr,                       //0xDU
 	 nullptr,                       //0xEU

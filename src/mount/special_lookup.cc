@@ -65,7 +65,7 @@ static EntryParam lookup(const Context &ctx, Inode parent, const char *name,
 }
 }  //InodeStats
 
-namespace InodeBaldor {
+namespace InodeHello {
 static EntryParam lookup(__attribute__((unused)) const Context &ctx, __attribute__((unused)) Inode parent,
 						 __attribute__((unused)) const char *name, __attribute__((unused)) char attrstr[256]) {
 	EntryParam e;
@@ -75,7 +75,7 @@ static EntryParam lookup(__attribute__((unused)) const Context &ctx, __attribute
 	attr_to_stat(inode_, attr, &e.attr);
 	return e;
 }
-} // InodeBaldor
+} // InodeHello
 
 namespace InodeOplog {
 static EntryParam lookup(const Context &ctx, Inode parent, const char *name,
@@ -174,7 +174,7 @@ static const std::array<std::function<EntryParam
 	 nullptr,                       //0x8U
 	 nullptr,                       //0x9U
 	 nullptr,                       //0xAU
-	 &InodeBaldor::lookup,          //0xBU
+	 &InodeHello::lookup,          //0xBU
 	 nullptr,                       //0xCU
 	 nullptr,                       //0xDU
 	 nullptr,                       //0xEU

@@ -34,7 +34,7 @@ TEST(MountUnitTests, TestSpecialFileHelloReturnsExpectedResult) {
 
 	auto context1 = std::unique_ptr<LizardClient::Context>(new LizardClient::Context(12, 13, 14, 16));
 
-	auto readReply = special_read(InodeBaldor::inode_, *context1, 80, 0, &fi, 0);
+	auto readReply = special_read(InodeHello::inode_, *context1, 80, 0, &fi, 0);
 
 	EXPECT_EQ(expectedResult, readReply);
 }
@@ -43,7 +43,7 @@ TEST(MountUnitTests, TestHelloSpecialFileAttributeContainsInode) {
 	char attrstr[256] {0};
 	auto context1 = std::unique_ptr<LizardClient::Context>(new LizardClient::Context(12, 13, 14, 16));
 
-	auto attrReply = special_getattr(InodeBaldor::inode_, *context1, attrstr);
+	auto attrReply = special_getattr(InodeHello::inode_, *context1, attrstr);
 
-	EXPECT_EQ(attrReply.attr.st_ino, InodeBaldor::inode_);
+	EXPECT_EQ(attrReply.attr.st_ino, InodeHello::inode_);
 }

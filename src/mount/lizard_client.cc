@@ -94,7 +94,7 @@ namespace LizardClient {
 #define IS_SPECIAL_NAME(name) ((name)[0]=='.' && (strcmp(SPECIAL_FILE_NAME_STATS,(name))==0 \
 		|| strcmp(SPECIAL_FILE_NAME_MASTERINFO,(name))==0 || strcmp(SPECIAL_FILE_NAME_OPLOG,(name))==0 \
 		|| strcmp(SPECIAL_FILE_NAME_OPHISTORY,(name))==0 || strcmp(SPECIAL_FILE_NAME_TWEAKS,(name))==0 \
-		|| strcmp(SPECIAL_FILE_NAME_FILE_BY_INODE,(name))==0 || strcmp(SPECIAL_FILE_NAME_BALDOR,(name))==0 ))
+		|| strcmp(SPECIAL_FILE_NAME_FILE_BY_INODE,(name))==0 || strcmp(SPECIAL_FILE_NAME_HELLO,(name))==0 ))
 
 static GroupCache gGroupCache;
 
@@ -184,8 +184,8 @@ Inode getSpecialInodeByName(const char *name) {
 		return SPECIAL_INODE_STATS;
 	} else if (strcmp(name, SPECIAL_FILE_NAME_TWEAKS) == 0) {
 		return SPECIAL_INODE_TWEAKS;
-	} else if (strcmp(name, SPECIAL_FILE_NAME_BALDOR) == 0) {
-		return SPECIAL_INODE_BALDOR;
+	} else if (strcmp(name, SPECIAL_FILE_NAME_HELLO) == 0) {
+		return SPECIAL_INODE_HELLO;
 	} else if (strcmp(name, SPECIAL_FILE_NAME_OPLOG) == 0) {
 		return SPECIAL_INODE_OPLOG;
 	} else if (strcmp(name, SPECIAL_FILE_NAME_OPHISTORY) == 0) {

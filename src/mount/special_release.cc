@@ -51,9 +51,9 @@ static void release(FileInfo *fi) {
 }
 } // InodeStats
 
-namespace InodeBaldor {
+namespace InodeHello {
 static void release(__attribute__((unused)) FileInfo *fi) {}
-} // InodeBaldor
+} // InodeHello
 
 namespace InodeOplog {
 static void release(FileInfo *fi) {
@@ -109,7 +109,7 @@ static const std::array<ReleaseFunc, 16> funcs = {{
 	 nullptr,                       //0x8U
 	 nullptr,                       //0x9U
 	 nullptr,                       //0xAU
-	 &InodeBaldor::release,              //0xBU
+	 &InodeHello::release,              //0xBU
 	 nullptr,                       //0xCU
 	 nullptr,                       //0xDU
 	 nullptr,                       //0xEU

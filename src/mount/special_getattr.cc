@@ -51,14 +51,14 @@ static AttrReply getattr(const Context &ctx, char (&attrstr)[256]) {
 }
 } // InodeStats
 
-namespace InodeBaldor {
+namespace InodeHello {
 static AttrReply getattr(__attribute__((unused)) const Context &ctx, __attribute__((unused)) char (&attrstr)[256]) {
 	struct stat o_stbuf;
 	memset(&o_stbuf, 0, sizeof(struct stat));
 	attr_to_stat(inode_, attr, &o_stbuf);
 	return AttrReply{o_stbuf, 3600.0};
 }
-} // InodeBaldor
+} // InodeHello
 
 namespace InodeOplog {
 static AttrReply getattr(const Context &ctx, char (&attrstr)[256]) {
@@ -129,7 +129,7 @@ static const std::array<GetAttrFunc, 16> funcs = {{
 	 nullptr,                       //0x8U
 	 nullptr,                       //0x9U
 	 nullptr,                       //0xAU
-	 &InodeBaldor::getattr,         //0xBU
+	 &InodeHello::getattr,         //0xBU
 	 nullptr,                       //0xCU
 	 nullptr,                       //0xDU
 	 nullptr,                       //0xEU

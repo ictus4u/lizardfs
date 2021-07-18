@@ -39,7 +39,7 @@ const Attributes InodeStats::attr =
 	  {{'f', 0x01,0xA4, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,1, 0,0,0,0,0,0,0,0}};
 const Inode InodeStats::inode_ = SPECIAL_INODE_STATS;
 
-const Attributes InodeBaldor::attr =
+const Attributes InodeHello::attr =
 	  {{'f', // type (8bit)
 		0x01,0x24, // mode (16bit) 0x0124 == 0b100100100 == 0444
 		0,0,0,0, // uid (32bit)
@@ -50,7 +50,7 @@ const Attributes InodeBaldor::attr =
 		0,0,0,1, // nlink (32bit)
 		0,0,0,0,0,0,0,0x0d // length (64bit) 0x0d = 13 = strlen("Hello World!\n")
 	  }};
-const Inode InodeBaldor::inode_ = SPECIAL_INODE_BALDOR;
+const Inode InodeHello::inode_ = SPECIAL_INODE_HELLO;
 
 // 0x0100 == 0b100000000 == 0400
 const Attributes InodeOplog::attr =
