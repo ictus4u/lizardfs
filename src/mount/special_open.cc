@@ -68,7 +68,8 @@ static void open(const Context &ctx, FileInfo *fi) {
 } // InodeStats
 
 namespace InodeHello {
-static void open(__attribute__((unused)) const Context &ctx, FileInfo *fi) {
+static void open(const Context &ctx, FileInfo *fi) {
+	(void) ctx;
 	if ((fi->flags & O_ACCMODE) != O_RDONLY) {
 		throw RequestException(LIZARDFS_ERROR_EACCES);
 	}

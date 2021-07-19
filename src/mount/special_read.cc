@@ -120,7 +120,8 @@ static std::vector<uint8_t> read(const Context &ctx,
 
 namespace InodeHello {
 static std::vector<uint8_t> read(const Context &ctx,
-		size_t size, off_t off, __attribute__((unused)) FileInfo *fi, int debug_mode) {
+		size_t size, off_t off, FileInfo *fi, int debug_mode) {
+	(void) fi;
 	if (debug_mode) {
 		printDebugReadInfo(ctx, SPECIAL_INODE_HELLO, size, off);
 	}

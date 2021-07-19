@@ -52,7 +52,9 @@ static void release(FileInfo *fi) {
 } // InodeStats
 
 namespace InodeHello {
-static void release(__attribute__((unused)) FileInfo *fi) {}
+static void release(FileInfo *fi) {
+	(void) fi;
+}
 } // InodeHello
 
 namespace InodeOplog {

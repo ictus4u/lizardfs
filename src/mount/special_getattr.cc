@@ -52,7 +52,9 @@ static AttrReply getattr(const Context &ctx, char (&attrstr)[256]) {
 } // InodeStats
 
 namespace InodeHello {
-static AttrReply getattr(__attribute__((unused)) const Context &ctx, __attribute__((unused)) char (&attrstr)[256]) {
+static AttrReply getattr(const Context &ctx, char (&attrstr)[256]) {
+	(void) ctx;
+	(void) attrstr;
 	struct stat o_stbuf;
 	memset(&o_stbuf, 0, sizeof(struct stat));
 	attr_to_stat(inode_, attr, &o_stbuf);

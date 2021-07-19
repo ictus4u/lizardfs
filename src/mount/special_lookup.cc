@@ -66,8 +66,11 @@ static EntryParam lookup(const Context &ctx, Inode parent, const char *name,
 }  //InodeStats
 
 namespace InodeHello {
-static EntryParam lookup(__attribute__((unused)) const Context &ctx, __attribute__((unused)) Inode parent,
-						 __attribute__((unused)) const char *name, __attribute__((unused)) char attrstr[256]) {
+static EntryParam lookup(const Context &ctx, Inode parent, const char *name, char attrstr[256]) {
+	(void) ctx;
+	(void) parent;
+	(void) name;
+	(void) attrstr;
 	EntryParam e;
 	e.ino = inode_;
 	e.attr_timeout = 3600.0;
