@@ -25,6 +25,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "common/lizardfs_error_codes.h"
 #include "common/lru_cache.h"
 #include "common/massert.h"
 #include "common/small_vector.h"
@@ -415,6 +416,7 @@ void mfs_opendir(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) {
 		//opendir can be called asynchronously
 		static std::atomic<std::uint64_t> opendirSessionID{0};
 		fi->fh = opendirSessionID++;
+		LizardClient::update_readdir_session(fi->fh, 0);
 		fuse_reply_open(req, fi);
 	} catch (LizardClient::RequestException& e) {
 		fuse_reply_err(req, e.system_error_code);
@@ -590,6 +592,13 @@ void mfs_getxattr (fuse_req_t req, fuse_ino_t ino, const char *name, size_t size
 void mfs_getxattr (fuse_req_t req, fuse_ino_t ino, const char *name, size_t size) {
 	uint32_t position=0;
 #endif /* __APPLE__ */
+
+	// remove this when we support security.capability
+	if (strcmp(name, "security.capability") == 0) {
+		fuse_reply_err(req, LIZARDFS_ERROR_ENOTSUP);
+		return;
+	}
+
 	try {
 		auto ctx = get_context(req);
 		auto a = LizardClient::getxattr(ctx, ino, name, size, position);
