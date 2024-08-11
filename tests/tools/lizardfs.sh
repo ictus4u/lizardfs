@@ -4,7 +4,7 @@
 # is created and it contains information about the filestystem
 setup_local_empty_lizardfs() {
 	local use_moosefs=${USE_MOOSEFS:-}
-	local use_lizardfsXX=${LIZARDFSXX_TAG:-}
+	local use_lizardfsXX=${START_WITH_LEGACY_LIZARDFS:-}
 	local use_ramdisk=${USE_RAMDISK:-}
 	local use_loop=${USE_LOOP_DISKS:-}
 	local number_of_masterservers=${MASTERSERVERS:-1}
@@ -40,14 +40,12 @@ setup_local_empty_lizardfs() {
 	fi
 
 	if [[ $use_lizardfsXX ]]; then
-		if version_compare_gte "$LIZARDFSXX_TAG" "3.11.0" ; then
-			use_new_goal_config="true"
-		else
-			use_new_goal_config="false"
-		fi
-		LIZARDFSXX_DIR=${LIZARDFSXX_DIR_BASE}/lizardfs-${LIZARDFSXX_TAG}
+		# In old suite, when legacy version was >= 3.11, we set `use_new_goal_config`=true
+		# Maybe that's not what we want? (look at if above)
+		use_new_goal_config="true"
+		LIZARDFSXX_DIR=${LIZARDFSXX_DIR_BASE}/install/usr
 		export PATH="${LIZARDFSXX_DIR}/bin:${LIZARDFSXX_DIR}/sbin:$PATH"
-		build_lizardfsXX
+		install_lizardfsXX
 	fi
 
 	# Prepare configuration for metadata servers
@@ -155,16 +153,35 @@ lizardfs_metalogger_daemon() {
 	return ${PIPESTATUS[0]}
 }
 
-# lizardfs_mount_unmount <id>
-lizardfs_mount_unmount() {
+# lizardfs_mount_unmount_async <id>
+lizardfs_mount_unmount_async() {
 	local mount_id=$1
 	local mount_dir=${lizardfs_info_[mount${mount_id}]}
 	lizardfs_fusermount -u ${mount_dir}
 }
 
-# lizardfs_mount_start <id>
+# lizardfs_mount_unmount <id> <timeout>
+lizardfs_mount_unmount() {
+	local mount_id=$1
+	local timeout=${2:-'5 seconds'}
+	local mount_cmd="${lizardfs_info_[mnt${mount_id}_command]}"
+	local mount_dir="${lizardfs_info_[mount${mount_id}]}"
+	local test_cmd="! pgrep -f -u lizardfstest '\\<${mount_cmd}\\>.*${mount_dir}' >/dev/null"
+	sync "${mount_dir}"
+	lizardfs_mount_unmount_async ${mount_id}
+	wait_for "${test_cmd}" "$timeout"
+	local test_mount="grep -q '${mount_dir}' /proc/mounts"
+	assert_failure "${test_mount}"
+}
+
+# lizardfs_mount_start <id> <mount_cmd>
 lizardfs_mount_start() {
-	do_mount_ "$1"
+	local mount_id=$1
+	local mount_cmd=${2:-}
+	if [[ $mount_cmd ]]; then
+		configure_mount_ ${mount_id} ${mount_cmd}
+	fi
+	do_mount_ ${mount_id}
 }
 
 # A bunch of private function of this module
@@ -488,6 +505,23 @@ do_mount_() {
 	exit 2
 }
 
+configure_mount_() {
+	local mount_id=$1
+	local mount_cmd=$2
+	local mount_cfg=${lizardfs_info_[mount${mount_id}_cfg]}
+	local mount_dir=${lizardfs_info_[mount${mount_id}]}
+	local fuse_options=""
+	for fuse_option in $(echo ${FUSE_EXTRA_CONFIG-} | tr '|' '\n'); do
+		fuse_option_name=$(echo $fuse_option | cut -f1 -d'=')
+		${mount_cmd} --help |& grep " -o ${fuse_option_name}[ =]" > /dev/null \
+				|| test_fail "Your libfuse doesn't support $fuse_option_name flag"
+		fuse_options+="-o $fuse_option "
+	done
+	local call="${command_prefix} ${mount_cmd} -c ${mount_cfg} ${mount_dir} ${fuse_options}"
+	lizardfs_info_[mntcall$mount_id]=$call
+	lizardfs_info_[mnt${mount_id}_command]=${mount_cmd}
+}
+
 add_mount_() {
 	local mount_id=$1
 	local mount_dir=$mntdir/mfs${mount_id}
@@ -524,15 +558,7 @@ add_mount_() {
 		fi
 	fi
 
-	fuse_options=""
-	for fuse_option in $(echo ${FUSE_EXTRA_CONFIG-} | tr '|' '\n'); do
-		fuse_option_name=$(echo $fuse_option | cut -f1 -d'=')
-		${LZFS_MOUNT_COMMAND} --help |& grep " -o ${fuse_option_name}[ =]" > /dev/null \
-				|| test_fail "Your libfuse doesn't support $fuse_option_name flag"
-		fuse_options+="-o $fuse_option "
-	done
-	local call="${command_prefix} ${LZFS_MOUNT_COMMAND} -c ${mount_cfg} ${mount_dir} ${fuse_options}"
-	lizardfs_info_[mntcall$mount_id]=$call
+	configure_mount_ ${mount_id} ${LZFS_MOUNT_COMMAND}
 	do_mount_ ${mount_id}
 }
 
