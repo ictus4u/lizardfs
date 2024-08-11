@@ -20,21 +20,24 @@
 #include "common/platform.h"
 #include "mount/lizard_client.h"
 
-#include <assert.h>
+#include <atomic>
+#include <new>
+#include <memory>
+#include <vector>
+#include <list>
+#include <map>
+#include <unordered_map>
+#include <string>
+#include <fstream>
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cstdint>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <pthread.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
-#include <cstdint>
-#include <fstream>
-#include <map>
-#include <memory>
-#include <new>
-#include <string>
-#include <vector>
 
 #include "common/access_control_list.h"
 #include "common/acl_converter.h"
@@ -100,7 +103,7 @@ static GroupCache gGroupCache;
 
 struct ReaddirSession {
 	uint64_t lastReadIno;
-	bool restarted;
+	std::atomic<bool> restarted;
 	ReaddirSession(uint64_t ino = 0)
 		: lastReadIno(ino)
 		, restarted(false) {
@@ -160,14 +163,6 @@ static void registerGroupsInMaster(Context &ctx) {
 		update_credentials(index, groups);
 	} else {
 		updateGroups(ctx);
-	}
-}
-
-void masterDisconnectedCallback() {
-	gGroupCache.reset();
-	std::lock_guard<std::mutex> sessions_lock(gReaddirMutex);
-	for (auto& rs : gReaddirSessions) {
-		rs.second.restarted = true;
 	}
 }
 
@@ -243,17 +238,13 @@ void drop_readdir_session(uint64_t opendirSessionID) {
 	gReaddirSessions.erase(opendirSessionID);
 }
 
-static void updateNextReaddirEntryIndexIfMasterRestarted(uint64_t &nextEntryIndex,
-		Context &ctx, Inode parentInode, uint64_t opendirSessionId, uint64_t requestSize) {
-	std::lock_guard<std::mutex> sessions_guard(gReaddirMutex);
-	ReaddirSessions::iterator sessionIt = gReaddirSessions.find(opendirSessionId);
-	if ((sessionIt == gReaddirSessions.end()) || !(sessionIt->second.restarted)) {
+static void updateNextReaddirEntryIndexIfMasterRestarted(ReaddirSession& readdirSession, uint64_t &nextEntryIndex,
+		Context &ctx, Inode parentInode, uint64_t requestSize) {
+	if (!readdirSession.restarted) {
 		return;
 	}
 	std::vector<DirectoryEntry> dirEntries;
 	uint8_t status = 0;
-	ReaddirSession& rs = sessionIt->second;
-	rs.restarted = false;
 	nextEntryIndex = 0;
 	while (true) {
 		dirEntries.clear();
@@ -267,8 +258,8 @@ static void updateNextReaddirEntryIndexIfMasterRestarted(uint64_t &nextEntryInde
 		std::vector<DirectoryEntry>::const_iterator direntIt = find_if(
 				dirEntries.cbegin(),
 				dirEntries.cend(),
-				[&rs](DirectoryEntry const& de) {
-					return (de.inode == rs.lastReadIno);
+				[&readdirSession](DirectoryEntry const& de) {
+					return (de.inode == readdirSession.lastReadIno);
 				}
 			);
 		if (direntIt != dirEntries.end()) {
@@ -277,6 +268,16 @@ static void updateNextReaddirEntryIndexIfMasterRestarted(uint64_t &nextEntryInde
 			break;
 		}
 		nextEntryIndex = dirEntries.back().next_index;
+	}
+	readdirSession.restarted = false;
+}
+
+void masterDisconnectedCallback() {
+	gGroupCache.reset();
+	gDirEntryCache.clear();
+	std::lock_guard<std::mutex> sessions_lock(gReaddirMutex);
+	for (auto& rs : gReaddirSessions) {
+		rs.second.restarted = true;
 	}
 }
 
@@ -1637,12 +1638,23 @@ std::vector<DirEntry> readdir(Context &ctx, uint64_t fh, Inode ino, off_t off, s
 	uint64_t request_size = std::min<std::size_t>(std::max<std::size_t>(kBatchSize, max_entries),
 	                                              matocl::fuseGetDir::kMaxNumberOfDirectoryEntries);
 
-	updateNextReaddirEntryIndexIfMasterRestarted(entry_index, ctx, ino, fh, request_size);
+	ReaddirSession* readdirSession(nullptr);
+	/* Scope for lock guard. */ {
+		std::lock_guard<std::mutex> sessions_guard(gReaddirMutex);
+		ReaddirSessions::iterator sessionIt = gReaddirSessions.find(fh);
+		sassert(sessionIt != gReaddirSessions.end());
+		readdirSession = &sessionIt->second;
+	}
+	do {
+		updateNextReaddirEntryIndexIfMasterRestarted(*readdirSession, entry_index, ctx, ino, request_size);
+		status = fs_getdir(ino, ctx.uid, ctx.gid, entry_index, request_size, dir_entries);
+		if (status == LIZARDFS_ERROR_GROUPNOTREGISTERED) {
+			registerGroupsInMaster(ctx);
+			updateNextReaddirEntryIndexIfMasterRestarted(*readdirSession, entry_index, ctx, ino, request_size);
+			status = fs_getdir(ino, ctx.uid, ctx.gid, entry_index, request_size, dir_entries);
+		}
+	} while (readdirSession->restarted);
 
-	RETRY_ON_ERROR_WITH_UPDATED_CREDENTIALS(
-		status, ctx,
-		fs_getdir(ino, ctx.uid, ctx.gid, entry_index, request_size, dir_entries)
-	);
 	auto data_acquire_time = gDirEntryCache.updateTime();
 
 	if(status != LIZARDFS_STATUS_OK) {
@@ -1653,18 +1665,15 @@ std::vector<DirEntry> readdir(Context &ctx, uint64_t fh, Inode ino, off_t off, s
 	gDirEntryCache.updateTime();
 
 	// dir_entries.front().index must be equal to entry_index
-	gDirEntryCache.insertSubsequent(ctx, ino, entry_index, dir_entries, data_acquire_time);
+	gDirEntryCache.insertSequence(ctx, ino, dir_entries, data_acquire_time);
 	if (dir_entries.size() < request_size) {
 		// insert 'no more entries' marker
 		auto marker_index = entry_index;
 		if (!dir_entries.empty()) {
 			marker_index = dir_entries.back().next_index;
 		}
-
+		gDirEntryCache.invalidate(ctx, ino, marker_index);
 		gDirEntryCache.insert(ctx, ino, 0, marker_index, marker_index, "", Attributes{{}}, data_acquire_time);
-		if (marker_index != std::numeric_limits<uint64_t>::max()) {
-			gDirEntryCache.invalidate(ctx, ino, marker_index + 1);
-		}
 	}
 
 	if (gDirEntryCache.size() > gDirEntryCacheMaxSize) {
@@ -2128,7 +2137,7 @@ ReadCache::Result read(Context &ctx,
 
 	uint32_t ssize = alignedSize;
 
-	err = read_data(fileinfo->data, alignedOffset, ssize, ret);
+	err = read_data(fileinfo->data, off, size, alignedOffset, ssize, ret);
 	ssize = ret.requestSize(alignedOffset, ssize);
 	if (err != LIZARDFS_STATUS_OK) {
 		oplog_printf(ctx, "read (%lu,%" PRIu64 ",%" PRIu64 "): %s",

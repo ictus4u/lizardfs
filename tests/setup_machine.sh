@@ -62,37 +62,40 @@ case "$release" in
 		apt-get -y install socat tidy wget libgoogle-perftools-dev libboost-filesystem-dev
 		apt-get -y install libboost-iostreams-dev libpam0g-dev libdb-dev nfs4-acl-tools libfmt-dev
 		apt-get -y install python3-pip valgrind ccache libfmt-dev libisal-dev libcrcutil-dev curl
-		apt-get -y install libgtest-dev libspdlog-dev libjudy-dev
-		pip3 install mypy black
+		apt-get -y install libgtest-dev libspdlog-dev libjudy-dev time bc
+		pip3 install mypy black flask requests types-requests
 		;;
 	CentOS/7*)
 		yum -y install asciidoc cmake fuse-devel git gcc gcc-c++ make pkgconfig rpm-build zlib-devel
 		yum -y install acl attr dbench nc pylint rsync socat tidy wget gperftools-libs
 		yum -y install boost-program-options boost-system libboost-filesystem libboost-iostreams
-		yum -y install pam-devel libdb-devel nfs4-acl-tools
+		yum -y install pam-devel libdb-devel nfs4-acl-tools time bc
 		;;
 	CentOS/8*)
 		dnf -y install asciidoc cmake fuse-devel git gcc gcc-c++ make pkgconfig rpm-build zlib-devel
 		dnf -y install acl attr dbench nc pylint rsync socat tidy wget gperftools-libs
 		dnf -y install boost-program-options boost-system boost-filesystem boost-iostreams
 		dnf -y install pam-devel libdb-devel nfs4-acl-tools fuse3 fuse3-devel
-		dnf -y install fmt-devel spdlog-devel boost-devel libtirpc-devel
+		dnf -y install fmt-devel spdlog-devel boost-devel libtirpc-devel time bc
 		dnf -y install --enablerepo=PowerTools gtest-devel
 		# install openbsd version of netcat
 		dnf -y install epel-release
 		dnf -y update
-		dnf -y install --enablerepo=epel-testing netcat
+		dnf -y install --enablerepo=epel-testing netcat dnf-utils
 		update-alternatives --install /usr/bin/nc nc /usr/bin/netcat 1
-		pip3 install black mypy
+		pip3 install black mypy flask requests types-requests
 		;;
 	Fedora/*)
 		dnf -y install cmake gcc-c++ gtest-devel fmt-devel spdlog-devel fuse-devel fuse3-devel boost-devel
 		dnf -y install Judy-devel pam-devel libdb-devel thrift-devel valgrind pylint nfs4-acl-tools
-		dnf -y install libtirpc-devel
+		dnf -y install libtirpc-devel time dbench bc tidy wget fuse3 fuse fakeroot asciidoc dnf-utils
 		# install openbsd version of netcat
 		dnf -y install netcat
+		update-alternatives --remove-all nc
 		update-alternatives --install /usr/bin/nc nc /usr/bin/netcat 1
-		pip3 install black mypy
+		pip3 install black mypy flask requests types-requests
+		systemctl stop systemd-resolved.service
+		systemctl disable systemd-resolved.service
 		;;
 	*)
 		set +x
